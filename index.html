@@ -1,0 +1,265 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Memory Game</title>
+        <script src="js/phaser.min.js"></script>
+        <style type="text/css">
+            canvas{
+                width:100%;
+                height:100%;
+            }
+            
+            body{
+                padding: 0px;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+
+<script type="text/javascript">
+
+var game;
+var gameWidth = 960;
+var gameHeight = 600;
+
+var background;
+var elephant;
+
+var baseCardWidth = 128;
+var baseCardHeight = 128;
+
+
+var minYPadding = 100;
+var wCards = 5;
+var basePadding = ( gameWidth - (baseCardWidth*wCards) )/6;
+var basePaddingH = 18;
+
+var cardsGrid = {};
+var animalList;
+
+var hNCards = 5;
+var vNCards = 4;
+
+var gameCards;
+
+var gameState;
+var turnState;
+var score;
+var openedCards;
+var nPairs;
+var maxPairs = 10;
+
+var game_music;
+var confirm_sound;
+var error_sound;
+var scoreText = '';
+
+window.onload = function() {
+
+    //init game object and and disable antialiasing with last params
+    //new Game(width, height, renderer, parent, state, transparent, antialias, physicsConfig)
+    game = new Phaser.Game(gameWidth, gameHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update, render:render }, true, false);
+    
+    function preload () {
+        game.load.image('background', 'img/background0.png');
+        
+        game.load.spritesheet('elephant', 'img/elephant.png', 256, 256);
+        game.load.spritesheet('giraffe', 'img/giraffe.png', 256, 256);
+        game.load.spritesheet('hippo', 'img/hippo.png', 256, 256);
+        game.load.spritesheet('monkey', 'img/monkey.png', 256, 256);
+        game.load.spritesheet('panda', 'img/panda.png', 256, 256);
+        game.load.spritesheet('parrot', 'img/parrot.png', 256, 256);
+        game.load.spritesheet('penguin', 'img/penguin.png', 256, 256);
+        game.load.spritesheet('pig', 'img/pig.png', 256, 256);
+        game.load.spritesheet('rabbit', 'img/rabbit.png', 256, 256);
+        game.load.spritesheet('snake', 'img/snake.png', 256, 256);
+        
+        game.load.spritesheet('blank-card', 'img/blank-card.png', 256, 256);
+        
+        game.load.audio('game_music', 'music/Jungle.wav');
+        game.load.audio('confirm_sound', 'sound/Purchase.wav');
+        game.load.audio('error_sound', 'sound/Error.wav');
+    }
+
+    function create () {
+        gameState = "MENU";
+        turnState = "pick";
+        score = 0;
+        openedCards = [];
+        
+        background = game.add.sprite(0, 0, 'background');
+        background.scale.setTo( game.world.width/background.width , game.world.height/background.height);
+        
+        //elephant = game.add.sprite((baseCardWidth*0)+(basePadding*1), (baseCardHeight*0)+(basePaddingH*1), 'elephant');
+        //elephant.scale.setTo((1/2),(1/2));
+        
+        animalList = ["elephant","giraffe","hippo","monkey","panda","parrot","penguin","pig","rabbit","snake"];
+        
+        gameCards = game.add.group();
+        
+        //add music
+        game_music = game.add.audio('game_music');
+        game_music.volume = 0.3;
+        game_music.loop = true;
+        game_music.play();
+        
+        confirm_sound = game.add.audio('confirm_sound');
+        confirm_sound.volume = 0.7;
+        confirm_sound.loop = false;
+
+        
+        error_sound = game.add.audio('error_sound');
+        error_sound.volume = 0.8;
+        error_sound.loop = false;
+        
+        createCards();
+        
+        scoreText = game.add.text(16, 16, 'Score: '+score, { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" });
+        scoreText.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+        
+    }
+    
+    
+    function update () {
+        scoreText.setText('Score: ' + score);
+    }
+    
+
+    function render() {
+
+    }
+    
+    function createCards(){
+        
+        var animalListTemp = animalList.slice(0);
+        var animalListObject = {};
+        
+        for(x=0; x< animalList.length; x++){
+            animalListObject[animalList[x]+""] = {
+                name: animalList[x],
+                positions: 0
+            };
+        }
+        
+        var r;
+        for(x=0; x<hNCards; x++){
+            for(y=0; y<vNCards; y++){
+                
+                r = Math.floor((Math.random() * animalListTemp.length));
+                
+                cardsGrid["_"+x+""+y] = {
+                    name:animalListTemp[r]
+                }
+                
+                animalListObject[animalListTemp[r]].positions += 1;
+                
+                if(animalListObject[animalListTemp[r]].positions >= 2){
+                    animalListTemp.splice(r, 1);
+                }
+                
+            }
+        }
+        
+        console.log("Grid: ",  cardsGrid);
+        
+        for(x=0; x<hNCards; x++){
+            for(y=0; y<vNCards; y++){
+                
+                var gameCard = gameCards.create( (baseCardWidth*x)+(basePadding*(x+1)), (baseCardHeight*y)+(basePaddingH*(y+1)), 'blank-card');
+                gameCard.scale.setTo((1/2),(1/2));
+                gameCard.inputEnabled = true;
+                gameCard.events.onInputDown.add(cardClicked, this);
+                
+                gameCard.hiden = true;
+                gameCard.symbol = cardsGrid["_"+x+""+y].name;
+                
+            }
+        }
+        
+        
+    }
+    
+    function cardClicked(sprite, pointer){
+        
+        if(turnState !== "pick" || sprite.hiden === false || openedCards.length >= 2){
+            error_sound.play();
+            return;
+        }
+        
+        turnState = "fliping";
+        tween = game.add.tween(sprite);
+        tween.to({ y: [sprite.y -20, sprite.y +20, sprite.y] }, 400, "Linear");
+        tween.onComplete.add(function(){
+            sprite.loadTexture(sprite.symbol);
+            sprite.hiden = false;
+            
+            openedCards.push(sprite);
+            
+            checkPairs();
+            
+            
+        }, this);
+        tween.start();
+        //sprite.loadTexture(sprite.symbol);
+    }
+    
+    function checkPairs(){
+        
+        if(openedCards.length <=1){
+            turnState = "pick";
+            return;
+        }
+        
+        if(openedCards[0].symbol === openedCards[1].symbol){
+            confirm_sound.play();
+            nPairs += 1;
+            score += 100;
+            openedCards = [];
+            
+            if(nPairs >= maxPairs){
+                turnState = "end";
+                gameState = "finished";
+            }else{
+                turnState = "pick";
+            }
+            
+            return;
+        }else{
+            error_sound.play();
+            score -= 25;
+            tween1 = game.add.tween(openedCards[0]);
+            tween2 = game.add.tween(openedCards[1]);
+            
+            tween1.to({ y: [openedCards[0].y -20, openedCards[0].y +20, openedCards[0].y] }, 400, "Linear");
+            tween1.onComplete.add(function(){
+                openedCards[0].loadTexture('blank-card');
+                openedCards[0].hiden = true;
+                tween2.start();
+            }, this);
+            
+            
+            tween2.to({ y: [openedCards[1].y -20, openedCards[1].y +20, openedCards[1].y] }, 400, "Linear");
+            tween2.onComplete.add(function(){
+                openedCards[1].loadTexture('blank-card');
+                openedCards[1].hiden = true;
+                
+                turnState = "pick";
+                openedCards = [];
+            }, this);
+            
+            
+            tween1.start();
+            //tween2.start();
+        }
+        
+        
+        
+    }
+    
+};
+</script>
+
+    </body>
+</html>
