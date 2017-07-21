@@ -1,7 +1,7 @@
-# Dodger-Game-Demo
-Dodger Game Demo created using PhaserJs
+# Memory-Game-Demo
+Memory Game Demo created using PhaserJs
 
-Play the demo here: (https://eddornelas.github.io/Dodger-Game-Demo/)
+Play the demo here: (https://eddornelas.github.io/Memory-Game-Demo/)
 
 ## Credits
 
