@@ -48,12 +48,14 @@ var gameState;
 var turnState;
 var score;
 var openedCards;
-var nPairs;
+var nPairs = 0;
 var maxPairs = 10;
 
 var game_music;
 var confirm_sound;
 var error_sound;
+var congratulations_sound;
+var you_win_sound;
 var scoreText = '';
 
 window.onload = function() {
@@ -81,6 +83,8 @@ window.onload = function() {
         game.load.audio('game_music', 'music/Jungle.wav');
         game.load.audio('confirm_sound', 'sound/Purchase.wav');
         game.load.audio('error_sound', 'sound/Error.wav');
+        game.load.audio('congratulations_sound', 'sound/congratulations.mp3');
+        game.load.audio('you_win_sound', 'sound/you_win.mp3');
     }
 
     function create () {
@@ -109,10 +113,20 @@ window.onload = function() {
         confirm_sound.volume = 0.7;
         confirm_sound.loop = false;
 
-        
         error_sound = game.add.audio('error_sound');
         error_sound.volume = 0.8;
         error_sound.loop = false;
+        
+        you_win_sound = game.add.audio('you_win_sound');
+        you_win_sound.volume = 0.8;
+        you_win_sound.loop = false;
+        
+        congratulations_sound = game.add.audio('congratulations_sound');
+        congratulations_sound.volume = 0.8;
+        congratulations_sound.loop = false;
+        congratulations_sound.onStop.add(function(){you_win_sound.play();}, this);
+        
+        
         
         createCards();
         
@@ -221,6 +235,7 @@ window.onload = function() {
             if(nPairs >= maxPairs){
                 turnState = "end";
                 gameState = "finished";
+                congratulations_sound.play();
             }else{
                 turnState = "pick";
             }
@@ -251,7 +266,6 @@ window.onload = function() {
             
             
             tween1.start();
-            //tween2.start();
         }
         
         

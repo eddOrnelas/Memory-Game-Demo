@@ -13,7 +13,7 @@ PhaserJs
 Greggman
 (https://opengameart.org/users/greggman)
 
-### -- Animal Tiles
+### -- Animal Tiles and Congratulations Voice
 Kenney
 (https://opengameart.org/users/kenney)
 
@@ -24,3 +24,8 @@ Homingstar
 ### -- Correct and Error Sound Effect
 KillaMaaki
 (https://opengameart.org/users/killamaaki)
+
+
+### -- Safari hat
+Webweaver Free Clipart
+http://www.webweaver.nu/clipart/travel.shtml
